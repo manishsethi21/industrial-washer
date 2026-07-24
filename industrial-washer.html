@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SYS-IPHUS-01</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    background: #D5D5D5;
+    font-family: 'Courier New', Courier, monospace;
+    overflow: hidden;
+  }
+
+  .scene {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #D5D5D5;
+  }
+
+  .noise-overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    opacity: 0.05;
+    mix-blend-mode: multiply;
+    z-index: 5;
+  }
+
+  .vignette {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 4;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,0.12) 100%);
+  }
+
+  .machine {
+    position: relative;
+    width: min(78vmin, 560px);
+    height: min(94vmin, 680px);
+    z-index: 2;
+  }
+
+  .casing {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 14px;
+    background:
+      linear-gradient(155deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 8%),
+      linear-gradient(180deg, #E4E4E2 0%, #D6D6D3 40%, #C9C9C6 78%, #BEBEBB 100%);
+    box-shadow:
+      inset 0 0 0 1px rgba(0,0,0,0.12),
+      inset 0 2px 3px rgba(255,255,255,0.5),
+      inset 0 -18px 30px -10px rgba(0,0,0,0.13),
+      0 18px 40px rgba(0,0,0,0.22),
+      0 3px 0 rgba(0,0,0,0.08);
+    overflow: hidden;
+  }
+
+  .casing::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(90deg, rgba(0,0,0,0.025) 0px, rgba(0,0,0,0.025) 1px, transparent 1px, transparent 3px);
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .edge-wear {
+    position: absolute;
+    inset: 0;
+    border-radius: 14px;
+    pointer-events: none;
+    box-shadow:
+      inset 0 0 40px 6px rgba(60,55,50,0.10),
+      inset 0 0 2px 1px rgba(0,0,0,0.25);
+  }
+
+  .scuff {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(60,55,48,0.10), transparent 70%);
+    pointer-events: none;
+  }
+  .scuff.s1 { width: 90px; height: 40px; left: 6%; bottom: 8%; transform: rotate(-12deg); }
+  .scuff.s2 { width: 60px; height: 60px; right: 9%; bottom: 20%; opacity: 0.7; }
+  .scuff.s3 { width: 130px; height: 20px; left: 12%; top: 46%; transform: rotate(4deg); opacity: 0.5; }
+
+  .detergent-drip {
+    position: absolute;
+    top: 108px;
+    right: 22%;
+    width: 34px;
+    height: 130px;
+    pointer-events: none;
+    background: linear-gradient(180deg,
+      rgba(90,130,160,0.28) 0%,
+      rgba(90,130,160,0.16) 30%,
+      rgba(90,130,160,0.08) 55%,
+      rgba(90,130,160,0.02) 80%,
+      rgba(90,130,160,0) 100%);
+    filter: blur(1.5px);
+    clip-path: polygon(20% 0%, 80% 0%, 68% 55%, 74% 75%, 55% 100%, 40% 78%, 30% 60%);
+  }
+  .detergent-drip::after {
+    content: "";
+    position: absolute;
+    left: 45%;
+    top: 0;
+    width: 3px;
+    height: 60%;
+    background: rgba(70,105,135,0.35);
+    filter: blur(0.5px);
+  }
+
+  .stencil {
+    position: absolute;
+    right: 22px;
+    bottom: 16px;
+    font-size: 10.5px;
+    letter-spacing: 1.2px;
+    color: rgba(70,70,68,0.38);
+    text-transform: uppercase;
+    user-select: none;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+  }
+
+  .control-panel {
+    position: absolute;
+    top: 26px;
+    left: 6%;
+    right: 6%;
+    height: 78px;
+    border-radius: 8px;
+    background: linear-gradient(180deg, #262626 0%, #1c1c1c 55%, #161616 100%);
+    box-shadow:
+      inset 0 3px 6px rgba(0,0,0,0.7),
+      inset 0 -1px 0 rgba(255,255,255,0.04),
+      0 1px 0 rgba(255,255,255,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+  }
+
+  .timer-box {
+    position: relative;
+    transform: rotate(-1.1deg);
+    background: #0a0a0a;
+    border-radius: 4px;
+    padding: 8px 14px;
+    box-shadow:
+      inset 0 0 4px rgba(0,0,0,0.9),
+      inset 0 2px 3px rgba(0,0,0,0.8),
+      0 0 0 1px rgba(0,0,0,0.6);
+  }
+
+  #timer {
+    font-size: 26px;
+    font-weight: bold;
+    letter-spacing: 3px;
+    color: #ff2b2b;
+    text-shadow:
+      0 0 4px rgba(255,40,40,0.75),
+      0 0 10px rgba(255,20,20,0.45);
+    animation: flicker 3.6s infinite;
+  }
+
+  @keyframes flicker {
+    0%, 100% { opacity: 1; }
+    4% { opacity: 0.82; }
+    6% { opacity: 1; }
+    47% { opacity: 1; }
+    48% { opacity: 0.6; }
+    49% { opacity: 1; }
+    73% { opacity: 0.9; }
+    75% { opacity: 1; }
+  }
+
+  .panel-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .status-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .status-led {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #1f6b2b;
+    box-shadow:
+      0 0 6px 2px rgba(60,200,80,0.55),
+      inset 0 0 2px rgba(0,0,0,0.5);
+    animation: pulse-led 2.2s ease-in-out infinite;
+  }
+  @keyframes pulse-led {
+    0%, 100% { opacity: 1; box-shadow: 0 0 6px 2px rgba(60,200,80,0.55), inset 0 0 2px rgba(0,0,0,0.5); }
+    50% { opacity: 0.75; box-shadow: 0 0 4px 1px rgba(60,200,80,0.35), inset 0 0 2px rgba(0,0,0,0.5); }
+  }
+
+  .status-label {
+    font-size: 7px;
+    letter-spacing: 1px;
+    color: #6a6a68;
+  }
+
+  .knob {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #4a4a4a, #1a1a1a 70%);
+    box-shadow: inset 0 0 3px rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.05);
+    position: relative;
+  }
+  .knob::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 50%;
+    width: 2px;
+    height: 8px;
+    background: #888;
+    transform: translateX(-50%);
+  }
+
+  .porthole-wrap {
+    position: absolute;
+    top: 130px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 76%;
+    aspect-ratio: 1 / 1;
+    max-width: 400px;
+  }
+
+  .rim {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background:
+      conic-gradient(from 200deg,
+        #7a7a78, #9a9a97 15%, #6c6c6a 30%, #979794 45%,
+        #5e5e5c 60%, #949492 75%, #767472 90%, #7a7a78 100%);
+    box-shadow:
+      inset 0 0 0 2px rgba(0,0,0,0.35),
+      inset 0 8px 14px rgba(0,0,0,0.45),
+      inset 0 -6px 10px rgba(255,255,255,0.15),
+      0 2px 4px rgba(0,0,0,0.3),
+      0 0 0 6px rgba(0,0,0,0.06);
+  }
+
+  .rim::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background-image:
+      radial-gradient(circle at 30% 25%, rgba(255,255,255,0.12), transparent 40%),
+      radial-gradient(circle at 75% 80%, rgba(0,0,0,0.18), transparent 45%);
+    mix-blend-mode: overlay;
+  }
+
+  .bolt {
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #999, #333 75%);
+    box-shadow: 0 1px 1px rgba(0,0,0,0.5);
+  }
+
+  .glass-frame {
+    position: absolute;
+    top: 9%;
+    left: 9%;
+    right: 9%;
+    bottom: 9%;
+    border-radius: 50%;
+    background: #0e0f10;
+    box-shadow:
+      inset 0 0 0 3px #4a4a48,
+      inset 0 10px 20px rgba(0,0,0,0.8),
+      inset 0 -4px 10px rgba(255,255,255,0.05);
+    overflow: hidden;
+  }
+
+  .drum-cavity {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 42%, #26262a 0%, #141416 55%, #0a0a0b 100%);
+  }
+
+  .drum-rotator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1px;
+    height: 1px;
+  }
+
+  .orbit {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1px;
+    height: 1px;
+  }
+
+  .orbit1 { animation: tumble-a 4.2s cubic-bezier(0.55,0.02,0.45,0.98) infinite; }
+  .orbit2 { animation: tumble-b 5.1s cubic-bezier(0.6,0.0,0.4,1) infinite; }
+  .orbit3 { animation: tumble-c 3.6s cubic-bezier(0.5,0.0,0.5,1) infinite; }
+
+  @keyframes tumble-a {
+    0%   { transform: rotate(0deg); }
+    18%  { transform: rotate(150deg); }
+    50%  { transform: rotate(210deg); }
+    68%  { transform: rotate(360deg); }
+    100% { transform: rotate(360deg); }
+  }
+  @keyframes tumble-b {
+    0%   { transform: rotate(40deg); }
+    22%  { transform: rotate(210deg); }
+    55%  { transform: rotate(255deg); }
+    77%  { transform: rotate(400deg); }
+    100% { transform: rotate(400deg); }
+  }
+  @keyframes tumble-c {
+    0%   { transform: rotate(-30deg); }
+    15%  { transform: rotate(110deg); }
+    48%  { transform: rotate(160deg); }
+    63%  { transform: rotate(330deg); }
+    100% { transform: rotate(330deg); }
+  }
+
+  .garment {
+    position: absolute;
+    transform-origin: center;
+  }
+
+  .garment-inner {
+    position: relative;
+    animation: self-spin 2.4s linear infinite;
+  }
+
+  .shirt .garment-inner { animation-duration: 2.9s; }
+  .trousers .garment-inner { animation-duration: 2.1s; animation-direction: reverse; }
+  .sweater .garment-inner { animation-duration: 3.4s; }
+
+  @keyframes self-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .shirt-shape {
+    position: relative;
+    width: 46px;
+    height: 40px;
+    left: -60px;
+    top: -20px;
+    background: linear-gradient(160deg, #33465c 0%, #24344a 55%, #1b2838 100%);
+    border-radius: 6px 6px 10px 10px;
+    box-shadow: inset 0 -4px 6px rgba(0,0,0,0.35), inset 0 2px 3px rgba(255,255,255,0.08);
+  }
+  .shirt-shape::before,
+  .shirt-shape::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    width: 14px;
+    height: 20px;
+    background: inherit;
+    border-radius: 4px;
+  }
+  .shirt-shape::before { left: -9px; transform: rotate(18deg); }
+  .shirt-shape::after { right: -9px; transform: rotate(-18deg); }
+
+  .trousers-shape {
+    position: relative;
+    width: 38px;
+    height: 46px;
+    left: 30px;
+    top: 10px;
+    background: linear-gradient(160deg, #3a3a3a 0%, #2a2a2a 55%, #1f1f1f 100%);
+    border-radius: 8px 8px 4px 4px;
+    box-shadow: inset 0 -4px 6px rgba(0,0,0,0.4), inset 0 2px 3px rgba(255,255,255,0.06);
+  }
+  .trousers-shape::before,
+  .trousers-shape::after {
+    content: "";
+    position: absolute;
+    bottom: -14px;
+    width: 13px;
+    height: 22px;
+    background: inherit;
+    border-radius: 0 0 5px 5px;
+  }
+  .trousers-shape::before { left: 4px; }
+  .trousers-shape::after { right: 4px; }
+
+  .sweater-shape {
+    position: relative;
+    width: 44px;
+    height: 38px;
+    left: -10px;
+    top: -55px;
+    background: linear-gradient(160deg, #7b7b78 0%, #63635f 55%, #4d4d4a 100%);
+    border-radius: 14px;
+    box-shadow: inset 0 -4px 6px rgba(0,0,0,0.3), inset 0 2px 3px rgba(255,255,255,0.1);
+  }
+
+  .glass-overlay {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    pointer-events: none;
+    background:
+      linear-gradient(115deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.02) 30%, rgba(255,255,255,0) 55%),
+      radial-gradient(circle at 70% 75%, rgba(255,255,255,0.05), transparent 40%);
+    mix-blend-mode: screen;
+  }
+
+  .condensation {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 0.5;
+    mix-blend-mode: screen;
+  }
+
+  .glass-highlight {
+    position: absolute;
+    top: 6%;
+    left: 14%;
+    width: 34%;
+    height: 20%;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0));
+    filter: blur(2px);
+    pointer-events: none;
+    transform: rotate(-18deg);
+  }
+
+  @media (max-width: 480px) {
+    .stencil { font-size: 8.5px; right: 14px; bottom: 10px; }
+    #timer { font-size: 21px; letter-spacing: 2px; }
+    .control-panel { height: 62px; top: 18px; }
+    .porthole-wrap { top: 92px; }
+  }
+</style>
+</head>
+<body>
+<div class="scene">
+  <svg class="noise-overlay" width="0" height="0">
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch" result="noise"/>
+      <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.9 0"/>
+    </filter>
+    <rect width="100%" height="100%" filter="url(#grain)"/>
+  </svg>
+  <svg class="noise-overlay" style="opacity:1;">
+    <rect width="100%" height="100%" fill="transparent" filter="url(#grain)"/>
+  </svg>
+
+  <div class="vignette"></div>
+
+  <div class="machine">
+    <div class="casing">
+      <div class="scuff s1"></div>
+      <div class="scuff s2"></div>
+      <div class="scuff s3"></div>
+      <div class="detergent-drip"></div>
+
+      <div class="control-panel">
+        <div class="timer-box">
+          <span id="timer">00:45</span>
+        </div>
+        <div class="panel-right">
+          <div class="status-group">
+            <div class="status-led"></div>
+            <div class="status-label">RUNNING</div>
+          </div>
+          <div class="knob"></div>
+        </div>
+      </div>
+
+      <div class="porthole-wrap">
+        <div class="rim">
+          <div class="bolt" style="top:6%; left:48%;"></div>
+          <div class="bolt" style="top:22%; left:84%;"></div>
+          <div class="bolt" style="top:70%; left:88%;"></div>
+          <div class="bolt" style="top:90%; left:50%;"></div>
+          <div class="bolt" style="top:70%; left:8%;"></div>
+          <div class="bolt" style="top:22%; left:10%;"></div>
+          <div class="glass-frame">
+            <div class="drum-cavity">
+              <div class="drum-rotator">
+                <div class="orbit orbit1">
+                  <div class="garment shirt">
+                    <div class="garment-inner"><div class="shirt-shape"></div></div>
+                  </div>
+                </div>
+                <div class="orbit orbit2">
+                  <div class="garment trousers">
+                    <div class="garment-inner"><div class="trousers-shape"></div></div>
+                  </div>
+                </div>
+                <div class="orbit orbit3">
+                  <div class="garment sweater">
+                    <div class="garment-inner"><div class="sweater-shape"></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="glass-overlay"></div>
+            <div class="glass-highlight"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stencil">SYS-IPHUS-01 // NON-PLACE</div>
+      <div class="edge-wear"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    var timeLeft = 45;
+    var el = document.getElementById('timer');
+
+    function render(t) {
+      var mm = "00";
+      var ss = t < 10 ? "0" + t : "" + t;
+      el.textContent = mm + ":" + ss;
+    }
+
+    render(timeLeft);
+
+    setInterval(function() {
+      timeLeft -= 1;
+      if (timeLeft < 0) {
+        timeLeft = 45;
+      }
+      render(timeLeft);
+    }, 1000);
+  })();
+</script>
+</body>
+</html>
